@@ -1,0 +1,546 @@
+{
+	"info": {
+		"_postman_id": "1e225d1d-35cd-4fae-b513-64b2355f7995",
+		"name": "LM Studio REST API (beta)",
+		"description": "##### Requires [LM Studio 0.3.6](https://lmstudio.ai/download) or newer. Still WIP, endpoints may change.\n\nLM Studio now has its own REST API, in addition to OpenAI compatibility mode ([learn more](https://lmstudio.ai/docs/api/openai-api)).\n\nThe REST API includes enhanced stats such as Token / Second and Time To First Token (TTFT), as well as rich information about models such as loaded vs unloaded, max context, quantization, and more.\n\n#### Supported API Endpoints\n\n- [<code>GET /api/v0/models</code>](https://lmstudio.ai/docs/app/api/endpoints/rest#get-apiv0models) - List available models\n    \n- [<code>GET /api/v0/models/{model}</code>](https://lmstudio.ai/docs/app/api/endpoints/rest#get-apiv0modelsmodel) - Get info about a specific model\n    \n- [<code>POST /api/v0/chat/completions</code>](https://lmstudio.ai/docs/app/api/endpoints/rest#post-apiv0chatcompletions) - Chat Completions (messages → assistant response)\n    \n- [<code>POST /api/v0/completions</code>](https://lmstudio.ai/docs/app/api/endpoints/rest#post-apiv0completions) - Text Completions (prompt → completion)\n    \n- [<code>POST /api/v0/embeddings</code>](https://lmstudio.ai/docs/app/api/endpoints/rest#post-apiv0embeddings) - Text Embeddings (text → embedding)\n    \n\n**👉** [<b>Read here for full documentation</b>](https://lmstudio.ai/docs/app/api/endpoints/rest)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "7519650"
+	},
+	"item": [
+		{
+			"name": "List available models",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}:{{port}}/api/{{api_version}}/models",
+					"host": [
+						"{{base_url}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"api",
+						"{{api_version}}",
+						"models"
+					]
+				},
+				"description": "List all loaded and downloaded models ([docs](https://lmstudio.ai/docs/app/api/endpoints/rest#get-apiv0models))\n\n**Response** **json** **schema**:\n\n``` json\n{\n  \"$schema\": \"https://json-schema.org/draft/2020-12/schema\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"data\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"id\": { \"type\": \"string\" },\n          \"object\": { \"type\": \"string\", \"const\": \"model\" },\n          \"type\": { \"type\": \"string\", \"enum\": [\"llm\", \"embeddings\"] },\n          \"publisher\": { \"type\": \"string\" },\n          \"arch\": { \"type\": \"string\" },\n          \"compatibility_type\": { \"type\": \"string\" },\n          \"quantization\": { \"type\": \"string\" },\n          \"state\": { \"type\": \"string\", \"enum\": [\"not-loaded\", \"loaded\"] },\n          \"max_context_length\": { \"type\": \"integer\" }\n        },\n        \"required\": [\n          \"id\",\n          \"object\",\n          \"type\",\n          \"publisher\",\n          \"arch\",\n          \"compatibility_type\",\n          \"quantization\",\n          \"state\",\n          \"max_context_length\"\n        ],\n        \"additionalProperties\": false\n      }\n    },\n    \"object\": { \"type\": \"string\", \"const\": \"list\" }\n  },\n  \"required\": [\"data\", \"object\"],\n  \"additionalProperties\": false\n}\n\n ```\n\n**Pydantic v2 data model:**\n\n``` python\nfrom pydantic import BaseModel, Field\nfrom typing import List, Literal\nclass ModelItem(BaseModel):\n    id: str\n    object: Literal[\"model\"]\n    type: Literal[\"llm\", \"embeddings\"]\n    publisher: str\n    arch: str\n    compatibility_type: str\n    quantization: str\n    state: Literal[\"not-loaded\", \"loaded\"]\n    max_context_length: int\nclass ModelList(BaseModel):\n    data: List[ModelItem]\n    object: Literal[\"list\"]\n\n ```"
+			},
+			"response": [
+				{
+					"name": "example 1",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1:1234/api/v0/models",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "1234",
+							"path": [
+								"api",
+								"v0",
+								"models"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "X-Powered-By",
+							"value": "Express"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "Content-Length",
+							"value": "619"
+						},
+						{
+							"key": "ETag",
+							"value": "W/\"26b-XjrBCHlGF/eSC5WHORqqYL8Stis\""
+						},
+						{
+							"key": "Date",
+							"value": "Sat, 19 Apr 2025 21:53:44 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=5"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"data\": [\n        {\n            \"id\": \"phi-4\",\n            \"object\": \"model\",\n            \"type\": \"llm\",\n            \"publisher\": \"lmstudio-community\",\n            \"arch\": \"phi3\",\n            \"compatibility_type\": \"gguf\",\n            \"quantization\": \"Q4_K_M\",\n            \"state\": \"not-loaded\",\n            \"max_context_length\": 16384\n        },\n        {\n            \"id\": \"text-embedding-nomic-embed-text-v1.5\",\n            \"object\": \"model\",\n            \"type\": \"embeddings\",\n            \"publisher\": \"nomic-ai\",\n            \"arch\": \"nomic-bert\",\n            \"compatibility_type\": \"gguf\",\n            \"quantization\": \"Q4_K_M\",\n            \"state\": \"not-loaded\",\n            \"max_context_length\": 2048\n        }\n    ],\n    \"object\": \"list\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Get info about a specific model",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}:{{port}}/api/{{api_version}}/models/{{model_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"api",
+						"{{api_version}}",
+						"models",
+						"{{model_id}}"
+					]
+				},
+				"description": "Get info about one specific model ([doc](https://lmstudio.ai/docs/app/api/endpoints/rest#get-apiv0modelsmodel)).\n\n**Response** **json** **schema**:\n\n``` json\n{\n  \"$schema\": \"https://json-schema.org/draft/2020-12/schema\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"id\": { \"type\": \"string\" },\n    \"object\": { \"type\": \"string\", \"const\": \"model\" },\n    \"type\": { \"type\": \"string\", \"const\": \"llm\" },\n    \"publisher\": { \"type\": \"string\" },\n    \"arch\": { \"type\": \"string\" },\n    \"compatibility_type\": { \"type\": \"string\" },\n    \"quantization\": { \"type\": \"string\" },\n    \"state\": { \"type\": \"string\", \"enum\": [\"not-loaded\", \"loaded\"] },\n    \"max_context_length\": { \"type\": \"integer\" }\n  },\n  \"required\": [\n    \"id\",\n    \"object\",\n    \"type\",\n    \"publisher\",\n    \"arch\",\n    \"compatibility_type\",\n    \"quantization\",\n    \"state\",\n    \"max_context_length\"\n  ],\n  \"additionalProperties\": false\n}\n\n ```\n\n**Pydantic v2 model:**\n\n``` python\nfrom pydantic import BaseModel, Field\nfrom typing import Literal\nclass ModelItem(BaseModel):\n    id: str\n    object: Literal[\"model\"]\n    type: Literal[\"llm\"]\n    publisher: str\n    arch: str\n    compatibility_type: str\n    quantization: str\n    state: Literal[\"not-loaded\", \"loaded\"]\n    max_context_length: int\n\n ```"
+			},
+			"response": [
+				{
+					"name": "example 1",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1:1234/api/v0/models/{{sample_model_id}}",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "1234",
+							"path": [
+								"api",
+								"v0",
+								"models",
+								"{{sample_model_id}}"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "X-Powered-By",
+							"value": "Express"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "Content-Length",
+							"value": "228"
+						},
+						{
+							"key": "ETag",
+							"value": "W/\"e4-8sGXmqSKh/HqLj7h6wWW8ISwfq4\""
+						},
+						{
+							"key": "Date",
+							"value": "Sat, 19 Apr 2025 21:59:21 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=5"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"id\": \"phi-4\",\n    \"object\": \"model\",\n    \"type\": \"llm\",\n    \"publisher\": \"lmstudio-community\",\n    \"arch\": \"phi3\",\n    \"compatibility_type\": \"gguf\",\n    \"quantization\": \"Q4_K_M\",\n    \"state\": \"not-loaded\",\n    \"max_context_length\": 16384\n}"
+				}
+			]
+		},
+		{
+			"name": "Chat Completions",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"model\": \"{{model_id}}\",\n  \"messages\": [\n    { \"role\": \"system\", \"content\": \"Always answer in rhymes.\" },\n    { \"role\": \"user\", \"content\": \"Introduce yourself.\" }\n  ],\n  \"temperature\": {{temperature}},\n  \"max_tokens\": {{max_tokens}},\n  \"stream\": {{stream}}\n}\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}:{{port}}/api/{{api_version}}/chat/completions",
+					"host": [
+						"{{base_url}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"api",
+						"{{api_version}}",
+						"chat",
+						"completions"
+					]
+				},
+				"description": "Chat Completions API. You provide a messages array and receive the next assistant response in the chat ([doc](https://lmstudio.ai/docs/app/api/endpoints/rest#post-apiv0chatcompletions)).\n\n**Response json schema:**\n\n``` json\n{\n  \"$schema\": \"https://json-schema.org/draft/2020-12/schema\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"id\": { \"type\": \"string\" },\n    \"object\": { \"type\": \"string\", \"const\": \"chat.completion\" },\n    \"created\": { \"type\": \"integer\" },\n    \"model\": { \"type\": \"string\" },\n    \"choices\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"index\": { \"type\": \"integer\" },\n          \"logprobs\": { \"type\": [\"null\", \"object\"] },\n          \"finish_reason\": { \"type\": \"string\" },\n          \"message\": {\n            \"type\": \"object\",\n            \"properties\": {\n              \"role\": { \"type\": \"string\" },\n              \"content\": { \"type\": \"string\" }\n            },\n            \"required\": [\"role\", \"content\"],\n            \"additionalProperties\": false\n          }\n        },\n        \"required\": [\"index\", \"logprobs\", \"finish_reason\", \"message\"],\n        \"additionalProperties\": false\n      }\n    },\n    \"usage\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"prompt_tokens\": { \"type\": \"integer\" },\n        \"completion_tokens\": { \"type\": \"integer\" },\n        \"total_tokens\": { \"type\": \"integer\" }\n      },\n      \"required\": [\"prompt_tokens\", \"completion_tokens\", \"total_tokens\"],\n      \"additionalProperties\": false\n    },\n    \"stats\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"tokens_per_second\": { \"type\": \"number\" },\n        \"time_to_first_token\": { \"type\": \"number\" },\n        \"generation_time\": { \"type\": \"number\" },\n        \"stop_reason\": { \"type\": \"string\" }\n      },\n      \"required\": [\"tokens_per_second\", \"time_to_first_token\", \"generation_time\", \"stop_reason\"],\n      \"additionalProperties\": false\n    },\n    \"model_info\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"arch\": { \"type\": \"string\" },\n        \"quant\": { \"type\": \"string\" },\n        \"format\": { \"type\": \"string\" },\n        \"context_length\": { \"type\": \"integer\" }\n      },\n      \"required\": [\"arch\", \"quant\", \"format\", \"context_length\"],\n      \"additionalProperties\": false\n    },\n    \"runtime\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"name\": { \"type\": \"string\" },\n        \"version\": { \"type\": \"string\" },\n        \"supported_formats\": {\n          \"type\": \"array\",\n          \"items\": { \"type\": \"string\" }\n        }\n      },\n      \"required\": [\"name\", \"version\", \"supported_formats\"],\n      \"additionalProperties\": false\n    }\n  },\n  \"required\": [\n    \"id\",\n    \"object\",\n    \"created\",\n    \"model\",\n    \"choices\",\n    \"usage\",\n    \"stats\",\n    \"model_info\",\n    \"runtime\"\n  ],\n  \"additionalProperties\": false\n}\n\n ```\n\n**Pydantic v2 model:**\n\n``` python\nfrom pydantic import BaseModel\nfrom typing import List, Optional\n\nclass Message(BaseModel):\n    role: str\n    content: str\n\nclass Choice(BaseModel):\n    index: int\n    logprobs: Optional[dict] = None\n    finish_reason: str\n    message: Message\n\nclass Usage(BaseModel):\n    prompt_tokens: int\n    completion_tokens: int\n    total_tokens: int\n\nclass Stats(BaseModel):\n    tokens_per_second: float\n    time_to_first_token: float\n    generation_time: float\n    stop_reason: str\n\nclass ModelInfo(BaseModel):\n    arch: str\n    quant: str\n    format: str\n    context_length: int\n\nclass Runtime(BaseModel):\n    name: str\n    version: str\n    supported_formats: List[str]\n\nclass ChatCompletionResponse(BaseModel):\n    id: str\n    object: str\n    created: int\n    model: str\n    choices: List[Choice]\n    usage: Usage\n    stats: Stats\n    model_info: ModelInfo\n    runtime: Runtime\n\n ```"
+			},
+			"response": [
+				{
+					"name": "example 1",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"model\": \"phi-4\",\n  \"messages\": [\n    { \"role\": \"system\", \"content\": \"Always answer in rhymes.\" },\n    { \"role\": \"user\", \"content\": \"Introduce yourself.\" }\n  ],\n  \"temperature\": 0.7,\n  \"max_tokens\": 100,\n  \"stream\": false\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:1234/api/v0/chat/completions",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "1234",
+							"path": [
+								"api",
+								"v0",
+								"chat",
+								"completions"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "X-Powered-By",
+							"value": "Express"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "Content-Length",
+							"value": "1148"
+						},
+						{
+							"key": "ETag",
+							"value": "W/\"47c-9pYZ8v45ZlsfmenQzfOsDGpdvj4\""
+						},
+						{
+							"key": "Date",
+							"value": "Sat, 19 Apr 2025 22:35:07 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=5"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"id\": \"chatcmpl-em8k6y65qytrj5q7yuox\",\n    \"object\": \"chat.completion\",\n    \"created\": 1745102100,\n    \"model\": \"phi-4\",\n    \"choices\": [\n        {\n            \"index\": 0,\n            \"logprobs\": null,\n            \"finish_reason\": \"stop\",\n            \"message\": {\n                \"role\": \"assistant\",\n                \"content\": \"Hello, I'm your AI guide,  \\nWith wisdom and wit by my side.  \\nIn knowledge vast, I dive deep,  \\nTo help you when questions leap.\\n\\nFrom queries big to those quite small,  \\nI aim to assist one and all.  \\nIn rhyme or reason, I'll reply,  \\nTo make your learning truly fly!\\n\\nAsk away with curiosity,  \\nAnd let's explore this unity!\"\n            }\n        }\n    ],\n    \"usage\": {\n        \"prompt_tokens\": 21,\n        \"completion_tokens\": 82,\n        \"total_tokens\": 103\n    },\n    \"stats\": {\n        \"tokens_per_second\": 13.08336436034801,\n        \"time_to_first_token\": 0.778,\n        \"generation_time\": 6.344,\n        \"stop_reason\": \"stop\"\n    },\n    \"model_info\": {\n        \"arch\": \"phi3\",\n        \"quant\": \"Q4_K_M\",\n        \"format\": \"gguf\",\n        \"context_length\": 4096\n    },\n    \"runtime\": {\n        \"name\": \"llama.cpp-mac-arm64-apple-metal-advsimd\",\n        \"version\": \"1.26.0\",\n        \"supported_formats\": [\n            \"gguf\"\n        ]\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "Text Completions",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {}
+			},
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"model\": \"{{model_id}}\",\n    \"prompt\": \"{{prompt}}\",\n    \"temperature\": {{temperature}},\n    \"max_tokens\": {{max_tokens}},\n    \"stream\": {{stream}},\n    \"stop\": \"\\n\"\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}:{{port}}/api/{{api_version}}/completions",
+					"host": [
+						"{{base_url}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"api",
+						"{{api_version}}",
+						"completions"
+					]
+				},
+				"description": "Text Completions API. You provide a prompt and receive a completion ([doc](https://lmstudio.ai/docs/app/api/endpoints/rest#post-apiv0completions)).\n\n**Response json schema:**\n\n``` json\n{\n  \"$schema\": \"https://json-schema.org/draft/2020-12/schema\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"id\": { \"type\": \"string\" },\n    \"object\": { \"type\": \"string\", \"const\": \"text_completion\" },\n    \"created\": { \"type\": \"integer\" },\n    \"model\": { \"type\": \"string\" },\n    \"choices\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"index\": { \"type\": \"integer\" },\n          \"text\": { \"type\": \"string\" },\n          \"logprobs\": { \"type\": [\"null\", \"object\"] },\n          \"finish_reason\": { \"type\": \"string\" }\n        },\n        \"required\": [\"index\", \"text\", \"logprobs\", \"finish_reason\"],\n        \"additionalProperties\": false\n      }\n    },\n    \"usage\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"prompt_tokens\": { \"type\": \"integer\" },\n        \"completion_tokens\": { \"type\": \"integer\" },\n        \"total_tokens\": { \"type\": \"integer\" }\n      },\n      \"required\": [\"prompt_tokens\", \"completion_tokens\", \"total_tokens\"],\n      \"additionalProperties\": false\n    },\n    \"stats\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"tokens_per_second\": { \"type\": \"number\" },\n        \"time_to_first_token\": { \"type\": \"number\" },\n        \"generation_time\": { \"type\": \"number\" },\n        \"stop_reason\": { \"type\": \"string\" }\n      },\n      \"required\": [\"tokens_per_second\", \"time_to_first_token\", \"generation_time\", \"stop_reason\"],\n      \"additionalProperties\": false\n    },\n    \"model_info\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"arch\": { \"type\": \"string\" },\n        \"quant\": { \"type\": \"string\" },\n        \"format\": { \"type\": \"string\" },\n        \"context_length\": { \"type\": \"integer\" }\n      },\n      \"required\": [\"arch\", \"quant\", \"format\", \"context_length\"],\n      \"additionalProperties\": false\n    },\n    \"runtime\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"name\": { \"type\": \"string\" },\n        \"version\": { \"type\": \"string\" },\n        \"supported_formats\": {\n          \"type\": \"array\",\n          \"items\": { \"type\": \"string\" }\n        }\n      },\n      \"required\": [\"name\", \"version\", \"supported_formats\"],\n      \"additionalProperties\": false\n    }\n  },\n  \"required\": [\n    \"id\",\n    \"object\",\n    \"created\",\n    \"model\",\n    \"choices\",\n    \"usage\",\n    \"stats\",\n    \"model_info\",\n    \"runtime\"\n  ],\n  \"additionalProperties\": false\n}\n\n ```\n\n**Pydantic v2 model:**\n\n``` python\nfrom pydantic import BaseModel, Field\nfrom typing import List, Optional, Literal\n\nclass Choice(BaseModel):\n    index: int\n    text: str\n    logprobs: Optional[dict] = None\n    finish_reason: str\n\nclass Usage(BaseModel):\n    prompt_tokens: int\n    completion_tokens: int\n    total_tokens: int\n\nclass Stats(BaseModel):\n    tokens_per_second: float\n    time_to_first_token: float\n    generation_time: float\n    stop_reason: str\n\nclass ModelInfo(BaseModel):\n    arch: str\n    quant: str\n    format: str\n    context_length: int\n\nclass Runtime(BaseModel):\n    name: str\n    version: str\n    supported_formats: List[str]\n\nclass CompletionResponse(BaseModel):\n    id: str\n    object: Literal[\"text_completion\"]\n    created: int\n    model: str\n    choices: List[Choice]\n    usage: Usage\n    stats: Stats\n    model_info: ModelInfo\n    runtime: Runtime\n\n ```"
+			},
+			"response": [
+				{
+					"name": "example 1",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"model\": \"phi-4\",\n    \"prompt\": \"Tell me about transformer in machine learning.\",\n    \"temperature\": 0.7,\n    \"max_tokens\": 100,\n    \"stream\": false,\n    \"stop\": \"\\n\"\n  }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:1234/api/v0/completions",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "1234",
+							"path": [
+								"api",
+								"v0",
+								"completions"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "X-Powered-By",
+							"value": "Express"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "Content-Length",
+							"value": "733"
+						},
+						{
+							"key": "ETag",
+							"value": "W/\"2dd-rIWa/HkYzCqCHI1o+/l/4eDi8Z4\""
+						},
+						{
+							"key": "Date",
+							"value": "Sat, 19 Apr 2025 22:35:46 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=5"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"id\": \"cmpl-mbyugc70lapl1yb6lg7nek\",\n    \"object\": \"text_completion\",\n    \"created\": 1745102146,\n    \"model\": \"phi-4\",\n    \"choices\": [\n        {\n            \"index\": 0,\n            \"text\": \"\",\n            \"logprobs\": null,\n            \"finish_reason\": \"stop\"\n        }\n    ],\n    \"usage\": {\n        \"prompt_tokens\": 8,\n        \"completion_tokens\": 0,\n        \"total_tokens\": 8\n    },\n    \"stats\": {\n        \"tokens_per_second\": 250000,\n        \"time_to_first_token\": 0,\n        \"generation_time\": 0.318,\n        \"stop_reason\": \"eosFound\"\n    },\n    \"model_info\": {\n        \"arch\": \"phi3\",\n        \"quant\": \"Q4_K_M\",\n        \"format\": \"gguf\",\n        \"context_length\": 4096\n    },\n    \"runtime\": {\n        \"name\": \"llama.cpp-mac-arm64-apple-metal-advsimd\",\n        \"version\": \"1.26.0\",\n        \"supported_formats\": [\n            \"gguf\"\n        ]\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "Text Embeddings",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"model\": \"{{embed_id}}\",\n    \"input\": \"{{input}}\"\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}:{{port}}/api/{{api_version}}/embeddings",
+					"host": [
+						"{{base_url}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"api",
+						"{{api_version}}",
+						"embeddings"
+					]
+				},
+				"description": "Text Embeddings API. You provide a text and a representation of the text as an embedding vector is returned ([doc](https://lmstudio.ai/docs/app/api/endpoints/rest#post-apiv0embeddings)).\n\n**Response json schema:**\n\n``` json\n{\n  \"$schema\": \"https://json-schema.org/draft/2020-12/schema\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"object\": { \"type\": \"string\", \"const\": \"list\" },\n    \"data\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"object\": { \"type\": \"string\", \"const\": \"embedding\" },\n          \"embedding\": {\n            \"type\": \"array\",\n            \"items\": { \"type\": \"number\" }\n          },\n          \"index\": { \"type\": \"integer\" }\n        },\n        \"required\": [\"object\", \"embedding\", \"index\"],\n        \"additionalProperties\": false\n      }\n    },\n    \"model\": { \"type\": \"string\" },\n    \"usage\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"prompt_tokens\": { \"type\": \"integer\" },\n        \"total_tokens\": { \"type\": \"integer\" }\n      },\n      \"required\": [\"prompt_tokens\", \"total_tokens\"],\n      \"additionalProperties\": false\n    }\n  },\n  \"required\": [\"object\", \"data\", \"model\", \"usage\"],\n  \"additionalProperties\": false\n}\n\n ```\n\n**Pydantic v2 model:**\n\n``` python\nfrom pydantic import BaseModel\nfrom typing import List\n\nclass EmbeddingResponse(BaseModel):\n    object: str\n    embedding: List[float]\n    index: int\n\nclass Usage(BaseModel):\n    prompt_tokens: int\n    total_tokens: int\n\nclass Response(BaseModel):\n    object: str\n    data: List[EmbeddingResponse]\n    model: str\n    usage: Usage\n\n ```"
+			},
+			"response": [
+				{
+					"name": "example 1",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"model\": \"text-embedding-nomic-embed-text-v1.5\",\n    \"input\": \"Text\"\n  }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:1234/api/v0/embeddings",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "1234",
+							"path": [
+								"api",
+								"v0",
+								"embeddings"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "X-Powered-By",
+							"value": "Express"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "Content-Length",
+							"value": "23362"
+						},
+						{
+							"key": "ETag",
+							"value": "W/\"5b42-2pTBLfc2ES7+cgLjIaCO/dgn89U\""
+						},
+						{
+							"key": "Date",
+							"value": "Sat, 19 Apr 2025 22:43:07 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=5"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"object\": \"list\",\n    \"data\": [\n        {\n            \"object\": \"embedding\",\n            \"embedding\": [\n                -0.016724975779652596,\n                0.028486263006925583,\n                -0.14080046117305756,\n                -0.07996257394552231,\n                0.022804981097579002,\n                -0.048535946756601334,\n                0.035831306129693985,\n                -0.0020263458136469126,\n                -0.019630856812000275,\n                -0.031244784593582153,\n                -0.018573936074972153,\n                -0.00537070631980896,\n                0.09229204058647156,\n                0.08115289360284805,\n                -0.0443061962723732,\n                0.033575404435396194,\n                0.058571022003889084,\n                -0.04733402281999588,\n                -0.01436215452849865,\n                0.08151339739561081,\n                -0.02448463812470436,\n                -0.018031487241387367,\n                -0.02724100649356842,\n                0.008474198170006275,\n                0.04855551943182945,\n                0.025791039690375328,\n                0.043728310614824295,\n                0.0053544072434306145,\n                -0.05750003457069397,\n                -0.015724847093224525,\n                0.007888896390795708,\n                -0.0237406138330698,\n                -0.03454393148422241,\n                -0.0374455600976944,\n                0.03239194303750992,\n                0.008920863270759583,\n                0.020337305963039398,\n                0.06787582486867905,\n                -0.030484870076179504,\n                -0.021248498931527138,\n                0.023520128801465034,\n                -0.02850896678864956,\n                -0.0376613549888134,\n                -0.019968241453170776,\n                -0.003813330316916108,\n                -0.03341112658381462,\n                0.03895524889230728,\n                -0.058477144688367844,\n                0.03324758633971214,\n                -0.07526741921901703,\n                0.04549241438508034,\n                -0.014574605040252209,\n                0.02815200947225094,\n                -0.06819064170122147,\n                0.07473454624414444,\n                0.01280289702117443,\n                0.021345116198062897,\n                -0.06387887895107269,\n                0.04508032277226448,\n                -0.006391208153218031,\n                0.05788332223892212,\n                0.06045497581362724,\n                -0.0789385661482811,\n                0.08720081299543381,\n                0.06875714659690857,\n                -0.014506321400403976,\n                -0.03918873891234398,\n                0.04181492328643799,\n                0.02848806045949459,\n                -0.033398762345314026,\n                0.058984577655792236,\n                0.048954956233501434,\n                -0.018150461837649345,\n                0.005871129222214222,\n                -0.043431419879198074,\n                -0.02700701169669628,\n                -0.04443119093775749,\n                0.011542905122041702,\n                0.012653280049562454,\n                0.02688879705965519,\n                0.055287666618824005,\n                0.016165411099791527,\n                0.08218840509653091,\n                -0.02487991750240326,\n                0.0855150818824768,\n                0.03040439821779728,\n                -0.031003398820757866,\n                -0.0179107915610075,\n                -0.06338320672512054,\n                0.023108266294002533,\n                0.0022517696488648653,\n                0.014013510197401047,\n                -0.0016815459821373224,\n                0.06396839767694473,\n                -0.014695708639919758,\n                0.0013859557220712304,\n                -0.045938435941934586,\n                0.010184229351580143,\n                0.002066647168248892,\n                -0.03469252586364746,\n                -0.026237478479743004,\n                -0.018933920189738274,\n                0.02595459669828415,\n                0.02107401192188263,\n                0.01791539415717125,\n                0.049398891627788544,\n                0.01629045233130455,\n                0.003652626881375909,\n                -0.03691576421260834,\n                0.00015796894149389118,\n                0.005531582981348038,\n                -0.01554692443460226,\n                -0.053720761090517044,\n                0.0067182802595198154,\n                0.0022957336623221636,\n                -0.020034387707710266,\n                0.025827458128333092,\n                -0.017654158174991608,\n                0.002770161721855402,\n                0.043880149722099304,\n                0.028542915359139442,\n                0.03677479177713394,\n                0.04948512092232704,\n                0.011479386128485203,\n                0.009606593288481236,\n                0.04483442381024361,\n                0.028020914644002914,\n                -0.01654224283993244,\n                -0.04082247242331505,\n                -0.026759464293718338,\n                0.015394634567201138,\n                -0.02303912490606308,\n                -0.041783131659030914,\n                -0.028009995818138123,\n                -0.0016545754624530673,\n                0.07380954921245575,\n                -0.04792071506381035,\n                -0.02424330823123455,\n                -0.012766319327056408,\n                0.04887225478887558,\n                0.033076267689466476,\n                -0.016076063737273216,\n                0.006214786320924759,\n                -0.024681296199560165,\n                -0.0702739730477333,\n                -0.05045416206121445,\n                0.00028430981910787523,\n                -0.015058903954923153,\n                0.04263419657945633,\n                0.02233797311782837,\n                -0.013790355063974857,\n                0.005406522192060947,\n                -0.0025413362309336662,\n                0.013510436750948429,\n                0.04813401773571968,\n                0.020537951961159706,\n                0.055610526353120804,\n                -0.04631124436855316,\n                0.00854888092726469,\n                0.0542711541056633,\n                0.05836079269647598,\n                0.0171973779797554,\n                -0.031179562211036682,\n                0.05329231917858124,\n                -0.00041325335041619837,\n                -0.03804056718945503,\n                -0.008386362344026566,\n                0.038584496825933456,\n                0.05032513663172722,\n                0.004580295644700527,\n                -0.020069915801286697,\n                -0.0022772455122321844,\n                0.0001686675677774474,\n                0.015280053950846195,\n                -0.005636853165924549,\n                -0.014577158726751804,\n                0.053108252584934235,\n                -0.05857987329363823,\n                0.050618045032024384,\n                0.010049560107290745,\n                -0.03658902645111084,\n                -0.005034569650888443,\n                0.006263707764446735,\n                -0.012008399702608585,\n                -0.027309386059641838,\n                -0.004323969129472971,\n                -0.03148255869746208,\n                -0.04546814784407616,\n                -0.07319506257772446,\n                0.02413720078766346,\n                -0.04548361897468567,\n                0.030278213322162628,\n                -0.039457470178604126,\n                0.017599372193217278,\n                -0.025427892804145813,\n                -0.006795043125748634,\n                0.06538773328065872,\n                0.007201177068054676,\n                0.00358956097625196,\n                0.0428478941321373,\n                -0.027030859142541885,\n                0.003955089021474123,\n                -0.03791042044758797,\n                0.036963995546102524,\n                -0.026802435517311096,\n                0.027404969558119774,\n                -0.03394893929362297,\n                0.03607998043298721,\n                -0.041872538626194,\n                0.036670226603746414,\n                0.047272756695747375,\n                -0.029199056327342987,\n                -0.012484608218073845,\n                -0.021661097183823586,\n                0.027767280116677284,\n                -0.004740261472761631,\n                0.032108549028635025,\n                -0.005926663521677256,\n                -0.05722401291131973,\n                0.028875229880213737,\n                0.021576840430498123,\n                -0.013830302283167839,\n                -0.0016457948368042707,\n                -0.03760586678981781,\n                -0.0033006155863404274,\n                0.032414887100458145,\n                -0.011481319554150105,\n                0.024003425613045692,\n                -0.017003130167722702,\n                -0.012990045361220837,\n                -0.04890885949134827,\n                -0.07243170589208603,\n                0.0682309940457344,\n                -0.009106171317398548,\n                0.018393514677882195,\n                -0.0012018659617751837,\n                -0.03641696274280548,\n                0.061477791517972946,\n                -0.05651988834142685,\n                0.006129115354269743,\n                0.042512066662311554,\n                0.016994116827845573,\n                0.08000410348176956,\n                -0.027444014325737953,\n                0.011329018510878086,\n                0.024122728034853935,\n                0.03808211535215378,\n                -0.04546297714114189,\n                0.00297543709166348,\n                0.08530067652463913,\n                -0.0161234550178051,\n                0.004811715334653854,\n                0.022030681371688843,\n                0.031977444887161255,\n                0.0283382348716259,\n                -0.05204639583826065,\n                -0.03460633009672165,\n                -0.028992686420679092,\n                0.030668670311570168,\n                0.0014354194281622767,\n                0.021360941231250763,\n                0.022969925776124,\n                -0.04265952482819557,\n                -0.013177070766687393,\n                -0.04644468054175377,\n                -0.015306654386222363,\n                -0.003911686595529318,\n                -0.04154210165143013,\n                0.038019292056560516,\n                -0.004177914932370186,\n                -0.03199070319533348,\n                -0.022323021665215492,\n                0.010730055160820484,\n                0.03143586963415146,\n                0.005133778788149357,\n                0.027773622423410416,\n                0.03514536842703819,\n                0.0034404390025883913,\n                -0.03550838679075241,\n                0.01755373552441597,\n                -0.024557020515203476,\n                -0.034608032554388046,\n                -0.025737043470144272,\n                0.03149937838315964,\n                -0.04062248393893242,\n                0.008393936790525913,\n                -0.0023748804815113544,\n                -0.02848021872341633,\n                0.03186667710542679,\n                0.03719551861286163,\n                0.009027602151036263,\n                -0.0285177119076252,\n                -0.020120350643992424,\n                0.0560675747692585,\n                0.0076116034761071205,\n                0.010616099461913109,\n                0.03805479779839516,\n                0.01870601624250412,\n                -0.015904447063803673,\n                -0.020112130790948868,\n                0.028802258893847466,\n                0.035685110837221146,\n                0.06378111988306046,\n                0.06653682887554169,\n                -0.0651160180568695,\n                -0.0326949767768383,\n                0.07395654171705246,\n                -0.014252422377467155,\n                0.05477827787399292,\n                -0.03804365172982216,\n                -0.058174218982458115,\n                -0.03703254088759422,\n                -0.0436607226729393,\n                -0.00234253634698689,\n                -0.07957881689071655,\n                0.10428450256586075,\n                0.010294174775481224,\n                0.013022271916270256,\n                0.051243074238300323,\n                -0.023805471137166023,\n                -0.0012605374213308096,\n                -0.04640210047364235,\n                0.06182228401303291,\n                -0.016294892877340317,\n                -0.0034594943281263113,\n                0.002029304625466466,\n                -0.0017010577721521258,\n                -0.017190150916576385,\n                0.0249356497079134,\n                0.0023231005761772394,\n                -0.07053970545530319,\n                0.02719869278371334,\n                0.03155549615621567,\n                0.009415274485945702,\n                0.02799396403133869,\n                0.014460621401667595,\n                -0.0018068085191771388,\n                -0.004660603124648333,\n                -0.027953192591667175,\n                -0.025995474308729172,\n                0.10440361499786377,\n                -0.006813920568674803,\n                0.039099596440792084,\n                -0.05073397979140282,\n                0.01884550228714943,\n                -0.04984616860747337,\n                -0.02561846747994423,\n                -0.02582012675702572,\n                0.010740022175014019,\n                0.02976960875093937,\n                -0.04149665683507919,\n                -0.00810901541262865,\n                0.033992670476436615,\n                -0.027557576075196266,\n                0.013411514461040497,\n                -0.001969032920897007,\n                0.061254166066646576,\n                0.0009830454364418983,\n                0.012785477563738823,\n                -0.020433900877833366,\n                0.06190820783376694,\n                -0.001728738658130169,\n                0.03204949572682381,\n                -0.03579765185713768,\n                -0.009564908221364021,\n                0.03896231949329376,\n                0.016214901581406593,\n                0.038503870368003845,\n                0.004122061189264059,\n                0.04725513234734535,\n                0.03186418488621712,\n                -0.03073836863040924,\n                -0.017686130478978157,\n                0.009407120756804943,\n                0.034726981073617935,\n                0.007558748591691256,\n                -0.05844569206237793,\n                -0.01595173217356205,\n                0.043513596057891846,\n                -0.02434113807976246,\n                -0.01277018804103136,\n                0.02034376747906208,\n                0.008472352288663387,\n                0.012432615272700787,\n                0.009633077308535576,\n                -0.011045732535421848,\n                0.025709178298711777,\n                0.01073069591075182,\n                0.005097758956253529,\n                0.014421194791793823,\n                -0.008018791675567627,\n                -0.02603852190077305,\n                -0.0615701749920845,\n                -0.022780567407608032,\n                -0.022238584235310555,\n                -0.05228210613131523,\n                0.04421994090080261,\n                0.005903664510697126,\n                -0.005971257109194994,\n                0.04637973755598068,\n                -0.0028816366102546453,\n                -0.04865013435482979,\n                -0.02459665760397911,\n                -0.010032076388597488,\n                -0.043603699654340744,\n                0.005395068321377039,\n                0.014823823235929012,\n                -0.059462033212184906,\n                0.03438994660973549,\n                -0.0011627576313912868,\n                0.020337821915745735,\n                0.029190044850111008,\n                0.023417672142386436,\n                -0.022497281432151794,\n                -0.04134472832083702,\n                0.020917896181344986,\n                0.018485073000192642,\n                0.007636429741978645,\n                -0.010859188623726368,\n                0.05322020873427391,\n                -0.03358189016580582,\n                0.10046321153640747,\n                -0.02313193492591381,\n                0.02061736024916172,\n                0.00988440215587616,\n                0.005066819954663515,\n                -0.029881149530410767,\n                0.01514491718262434,\n                -0.000009813103133637924,\n                -0.04785832017660141,\n                -0.040422480553388596,\n                0.0005179339204914868,\n                0.015412711538374424,\n                -0.014363949187099934,\n                -0.008215546607971191,\n                -0.032215703278779984,\n                0.0016563705867156386,\n                0.018890703096985817,\n                -0.006365794222801924,\n                0.017186742275953293,\n                -0.0030851000919938087,\n                -0.026999281719326973,\n                0.002259673085063696,\n                -0.0024157988373190165,\n                -0.0010716441320255399,\n                0.10367465764284134,\n                0.031717754900455475,\n                0.003862698096781969,\n                -0.010760468430817127,\n                0.017399998381733894,\n                0.026064079254865646,\n                0.011241882108151913,\n                0.02937217615544796,\n                0.045816484838724136,\n                0.06079993396997452,\n                -0.040700510144233704,\n                -0.0019457439193502069,\n                0.005383904092013836,\n                0.004523654468357563,\n                0.01345829851925373,\n                0.038785405457019806,\n                0.06162422522902489,\n                0.014069323427975178,\n                0.011813380755484104,\n                0.003220132552087307,\n                -0.04533175751566887,\n                0.0011893769260495901,\n                -0.007950477302074432,\n                0.06135478988289833,\n                0.033129677176475525,\n                -0.0578463152050972,\n                0.03211207687854767,\n                0.0321512334048748,\n                -0.0371212400496006,\n                0.06108498573303223,\n                0.04905525967478752,\n                -0.036068595945835114,\n                -0.05130608007311821,\n                0.014459398575127125,\n                0.03744467720389366,\n                0.021188903599977493,\n                -0.03525567427277565,\n                -0.019591612741351128,\n                -0.024196578189730644,\n                0.05717611312866211,\n                0.01207489799708128,\n                0.014444767497479916,\n                0.010941524989902973,\n                0.009784984402358532,\n                0.03226681053638458,\n                0.01497124694287777,\n                0.005614754743874073,\n                -0.0012221989454701543,\n                -0.007639069575816393,\n                -0.0541803278028965,\n                -0.09510519355535507,\n                -0.0270464476197958,\n                0.027787746861577034,\n                0.04553588479757309,\n                -0.008800896815955639,\n                0.03033982776105404,\n                0.04481538385152817,\n                -0.047512076795101166,\n                0.010108618065714836,\n                0.060861293226480484,\n                -0.03207697346806526,\n                -0.020678410306572914,\n                -0.06330905854701996,\n                -0.08745823055505753,\n                0.018429873511195183,\n                -0.019479813054203987,\n                0.01290773507207632,\n                -0.04638252407312393,\n                -0.0270913727581501,\n                0.02234693616628647,\n                -0.025687718763947487,\n                -0.01913137547671795,\n                0.032128382474184036,\n                -0.09231146425008774,\n                0.0020691263489425182,\n                -0.004330056253820658,\n                -0.03700965270400047,\n                0.016514472663402557,\n                0.023097049444913864,\n                -0.011529119685292244,\n                0.012267716228961945,\n                0.04877597093582153,\n                -0.1002030223608017,\n                0.028637636452913284,\n                -0.02191539853811264,\n                -0.004311306402087212,\n                0.04015050083398819,\n                -0.028202572837471962,\n                -0.0002801084192469716,\n                0.02528371848165989,\n                -0.03218674659729004,\n                -0.019122950732707977,\n                0.0031737987883388996,\n                0.02451627142727375,\n                -0.004336776211857796,\n                0.01881575584411621,\n                -0.010480201803147793,\n                -0.014530344866216183,\n                0.040887124836444855,\n                0.04184361919760704,\n                0.014168812893331051,\n                -0.05679398402571678,\n                0.02923761121928692,\n                0.00972052849829197,\n                -0.028090620413422585,\n                0.03667778521776199,\n                -0.09107770025730133,\n                -0.027211880311369896,\n                -0.03503323346376419,\n                -0.011637275107204914,\n                -0.029001077637076378,\n                -0.0671389028429985,\n                -0.03586369752883911,\n                0.0359615832567215,\n                -0.01754811592400074,\n                -0.0029820760246366262,\n                -0.02439234033226967,\n                0.012330715544521809,\n                0.03546643257141113,\n                0.009177439846098423,\n                0.023632407188415527,\n                0.024296225979924202,\n                0.0036907093599438667,\n                0.034710898995399475,\n                0.024742713198065758,\n                0.027224035933613777,\n                -0.05889130383729935,\n                -0.0011279064929112792,\n                0.04536803811788559,\n                -0.005013816989958286,\n                -0.05509684607386589,\n                0.06703794747591019,\n                0.01612110622227192,\n                -0.05436311662197113,\n                -0.023887481540441513,\n                -0.03665868937969208,\n                -0.059001121670007706,\n                -0.00450389226898551,\n                0.03830600157380104,\n                -0.0086411377415061,\n                -0.0007255368400365114,\n                -0.036125846207141876,\n                -0.0411570705473423,\n                0.014647689647972584,\n                -0.03773820772767067,\n                -0.013549691066145897,\n                0.01922544836997986,\n                0.014890102669596672,\n                0.0401400551199913,\n                0.024045005440711975,\n                -0.022713981568813324,\n                -0.006867037154734135,\n                -0.05287330970168114,\n                -0.028844770044088364,\n                -0.031517624855041504,\n                -0.008572293445467949,\n                0.028140252456068993,\n                0.08661966025829315,\n                -0.06162859871983528,\n                0.03639193996787071,\n                0.0868370532989502,\n                0.03169117122888565,\n                0.007785951253026724,\n                -0.002255446743220091,\n                -0.04061087965965271,\n                0.021884050220251083,\n                0.008041772991418839,\n                -0.044166140258312225,\n                -0.005167179275304079,\n                0.01076533179730177,\n                -0.04670868068933487,\n                0.0051872460171580315,\n                -0.0164243895560503,\n                0.020658833906054497,\n                -0.022404029965400696,\n                0.011050405912101269,\n                -0.039208076894283295,\n                0.05594416335225105,\n                -0.035731684416532516,\n                -0.012789039872586727,\n                -0.010239926166832447,\n                -0.0651930645108223,\n                -0.0003171284624841064,\n                -0.02129475586116314,\n                0.010559369809925556,\n                0.02174319513142109,\n                -0.008913151919841766,\n                -0.05986647680401802,\n                -0.04444140940904617,\n                -0.003906652797013521,\n                0.022057848051190376,\n                0.022393589839339256,\n                0.06406424194574356,\n                -0.01219008769840002,\n                0.05427031219005585,\n                -0.03872523456811905,\n                -0.037624653428792953,\n                -0.01008957251906395,\n                0.04032723978161812,\n                0.04047669842839241,\n                0.024494854733347893,\n                0.019408224150538445,\n                0.06861123442649841,\n                0.026351988315582275,\n                -0.00539110042154789,\n                0.06397771090269089,\n                0.08712482452392578,\n                0.008003667928278446,\n                -0.06873421370983124,\n                0.006101259496062994,\n                0.026244541630148888,\n                0.02155192382633686,\n                -0.027511660009622574,\n                -0.04837152734398842,\n                -0.025506699457764626,\n                -0.0015108505031093955,\n                0.013332873582839966,\n                -0.024990282952785492,\n                -0.034616757184267044,\n                0.043390437960624695,\n                -0.007813680917024612,\n                0.010696039535105228,\n                -0.013448446057736874,\n                -0.006977676879614592,\n                -0.01661750301718712,\n                -0.027801239863038063,\n                -0.02216530777513981,\n                0.0122923469170928,\n                -0.05942802131175995,\n                -0.039509035646915436,\n                0.028921768069267273,\n                0.0458814837038517,\n                0.04379649460315704,\n                -0.015208388678729534,\n                -0.06752417236566544,\n                -0.0019377687713131309,\n                0.021037165075540543,\n                0.038238950073719025,\n                -0.018980730324983597,\n                -0.032931264489889145,\n                -0.08624957501888275,\n                0.024710312485694885,\n                -0.011141217313706875,\n                -0.04164503887295723,\n                -0.04968210682272911,\n                -0.0020766714587807655,\n                -0.02275051921606064,\n                0.012787947431206703,\n                -0.01607799530029297,\n                -0.007776990998536348,\n                -0.0012759581441059709,\n                0.004385927692055702,\n                0.0014324374496936798,\n                -0.050276000052690506,\n                0.05013744905591011,\n                -0.018839845433831215,\n                0.012597938999533653,\n                0.030079152435064316,\n                0.009139139205217361,\n                -0.032389067113399506,\n                0.00989906769245863,\n                0.020685460418462753,\n                -0.03711821511387825,\n                -0.025096524506807327,\n                -0.09295842051506042,\n                -0.01867620088160038,\n                -0.0008704829961061478,\n                -0.020769454538822174,\n                0.03229007124900818,\n                0.02126483805477619,\n                0.051083050668239594,\n                -0.014996727928519249,\n                -0.039799463003873825,\n                -0.018528969958424568,\n                0.04304896667599678,\n                -0.009007073007524014,\n                -0.005299436394125223,\n                -0.05229618400335312,\n                -0.07425106316804886,\n                0.005116317421197891,\n                -0.026410261169075966,\n                0.06637373566627502,\n                -0.026029717177152634,\n                0.05001499876379967,\n                -0.011079560033977032,\n                0.005644075572490692,\n                0.016300830990076065,\n                -0.01612788997590542,\n                0.02965000458061695,\n                -0.0029397455509752035,\n                -0.016332469880580902,\n                -0.035715434700250626,\n                -0.018183765932917595,\n                -0.015044656582176685,\n                -0.024335814639925957,\n                -0.05458802357316017,\n                -0.009828008711338043,\n                0.016594955697655678,\n                0.027375327423214912,\n                0.004010454751551151,\n                0.02001401036977768,\n                -0.029918482527136803,\n                0.009911713190376759,\n                0.014880290254950523,\n                -0.01065616961568594,\n                0.060538992285728455,\n                -0.10154187679290771,\n                -0.022238565608859062,\n                -0.06073347106575966,\n                0.015650499612092972,\n                0.002024345099925995,\n                -0.010063348338007927,\n                0.03608177602291107,\n                0.0831465795636177,\n                -0.024218900129199028,\n                0.038136400282382965,\n                -0.02292979136109352,\n                -0.016627894714474678,\n                0.01803690567612648,\n                -0.004425672348588705,\n                0.025020064786076546,\n                -0.0037598642520606518,\n                -0.043465469032526016\n            ],\n            \"index\": 0\n        }\n    ],\n    \"model\": \"text-embedding-nomic-embed-text-v1.5\",\n    \"usage\": {\n        \"prompt_tokens\": 0,\n        \"total_tokens\": 0\n    }\n}"
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://127.0.0.1",
+			"type": "string"
+		},
+		{
+			"key": "port",
+			"value": "1234",
+			"type": "string"
+		},
+		{
+			"key": "api_version",
+			"value": "v0",
+			"type": "string"
+		},
+		{
+			"key": "model_id",
+			"value": "phi-4",
+			"type": "string"
+		},
+		{
+			"key": "prompt",
+			"value": "Tell me about transformer in machine learning.",
+			"type": "string"
+		},
+		{
+			"key": "temperature",
+			"value": "0.7",
+			"type": "string"
+		},
+		{
+			"key": "max_tokens",
+			"value": "100",
+			"type": "string"
+		},
+		{
+			"key": "stream",
+			"value": "false",
+			"type": "string"
+		},
+		{
+			"key": "input",
+			"value": "Text",
+			"type": "string"
+		},
+		{
+			"key": "embed_id",
+			"value": "text-embedding-nomic-embed-text-v1.5",
+			"type": "string"
+		}
+	]
+}
