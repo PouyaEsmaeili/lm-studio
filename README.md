@@ -1687,6 +1687,15 @@ URL: {{base_url}}:{{port}}/api/{{api_version}}/models
 
 
 ---
+
+### Generate MD documentation from postman collection:
+
+```commandline
+docgen build -i ./lm-studio.postman_collection.json -o ./README.md -m
+```
+
+---
+
 [Back to top](#lm-studio-rest-api-beta)
 
 >Generated at 2025-04-20 02:29:14 by [docgen](https://github.com/thedevsaddam/docgen)
