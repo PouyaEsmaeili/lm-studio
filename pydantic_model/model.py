@@ -65,7 +65,9 @@ class LMStudio(Model):
         value = model_settings.get("max_tokens") if model_settings else None
         return int(value) if isinstance(value, int) else None
 
-    def _get_temperature(self, model_settings: Optional[ModelSettings]) -> Optional[float]:
+    def _get_temperature(
+        self, model_settings: Optional[ModelSettings]
+    ) -> Optional[float]:
         value = model_settings.get("temperature") if model_settings else None
         return float(value) if isinstance(value, float) else None
 
@@ -83,20 +85,32 @@ class LMStudio(Model):
 
         request_body = {
             "model": self._model_name,
-            **({"max_tokens": max_tokens} if (max_tokens := self._get_max_tokens(model_settings)) else {}),
-            **({"temperature": temperature} if (temperature := self._get_temperature(model_settings)) else {}),
+            **(
+                {"max_tokens": max_tokens}
+                if (max_tokens := self._get_max_tokens(model_settings))
+                else {}
+            ),
+            **(
+                {"temperature": temperature}
+                if (temperature := self._get_temperature(model_settings))
+                else {}
+            ),
             # **({"stop": stop} if (stop := self._get_stop(model_settings)) else {}),
         }
 
         extracted_messages = []
         for message in messages:
             if message.instructions:
-                extracted_messages.append({"role": "system", "content": message.instructions})
+                extracted_messages.append(
+                    {"role": "system", "content": message.instructions}
+                )
             for part in message.parts:
                 if part.part_kind == "user-prompt" and isinstance(part.content, str):
                     extracted_messages.append({"role": "user", "content": part.content})
                 if part.part_kind == "system-prompt" and isinstance(part.content, str):
-                    extracted_messages.append({"role": "system", "content": part.content})
+                    extracted_messages.append(
+                        {"role": "system", "content": part.content}
+                    )
 
         request_body["messages"] = extracted_messages
         response = self.client.create_chat_completions(**request_body)
@@ -107,7 +121,9 @@ class LMStudio(Model):
             total_tokens=response.usage.total_tokens,
         )
 
-        text_parts = [TextPart(content=choice.message.content) for choice in response.choices]
+        text_parts = [
+            TextPart(content=choice.message.content) for choice in response.choices
+        ]
         return ModelResponse(text_parts, model_name=self.model_name), usage
 
 
@@ -115,20 +131,17 @@ class LMStudio(Model):
 if __name__ == "__main__":
     provider = LMStudioProvider()
     model = LMStudio(model_name="phi-4", provider=provider)
-
     system_prompt = (
         "You are a friendly and patient English tutor helping learners improve their language skills. "
         "You explain grammar in simple terms and provide gentle corrections without overwhelming the student."
     )
-
     instructions = (
         "Always encourage the student, correct their mistakes kindly, and suggest better ways to phrase sentences. "
         "Focus on improving grammar, vocabulary, and conversational fluency."
     )
-
     user_prompt = (
         "I writed a email to my boss but I'm not sure if it's correct. Can you check this:\n"
-        "\"Dear Mr. John, I am writing to inform you I has finished the report yesterday. Please let me know if you have any question. Thank you.\""
+        '"Dear Mr. John, I am writing to inform you I has finished the report yesterday. Please let me know if you have any question. Thank you."'
     )
 
     agent = Agent(

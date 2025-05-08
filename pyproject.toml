@@ -8,3 +8,8 @@ dependencies = [
     "lmstudio>=1.3.0",
     "pydantic-ai>=0.1.8",
 ]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.11.8",
+]
