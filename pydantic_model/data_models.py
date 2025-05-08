@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import List, Literal, Optional, Any
 
 class ModelData(BaseModel):
@@ -23,9 +23,9 @@ class Message(BaseModel):
 class ChatCompletionsRequest(BaseModel):
     model: str
     messages: List[Message]
-    temperature: Optional[float] = Field(default=0.7, ge=0.0, le=2.0)
-    max_tokens: Optional[int] = Field(default=100, gt=0)
-    stream: Optional[bool] = Field(default=False)
+    temperature: Optional[float]
+    max_tokens: Optional[int]
+    stream: Optional[bool]
 
 class ChatMessage(BaseModel):
     role: Literal["assistant"]
@@ -33,7 +33,7 @@ class ChatMessage(BaseModel):
 
 class ChatCompletionsChoice(BaseModel):
     index: int
-    logprobs: Optional[Any] = None
+    logprobs: Optional[Any]
     finish_reason: str
     message: ChatMessage
 
@@ -73,15 +73,15 @@ class ChatCompletionsResponse(BaseModel):
 class TextCompletionsRequest(BaseModel):
     model: str
     prompt: str
-    temperature: Optional[float] = Field(default=0.7, ge=0.0, le=2.0)
-    max_tokens: Optional[int] = Field(default=100, gt=0)
-    stream: Optional[bool] = Field(default=False)
-    stop: Optional[str] = None
+    temperature: Optional[float]
+    max_tokens: Optional[int]
+    stream: Optional[bool]
+    stop: Optional[str]
 
 class TextCompletionsChoice(BaseModel):
     index: int
     text: str
-    logprobs: Optional[Any] = None
+    logprobs: Optional[Any]
     finish_reason: str
 
 class TextCompletionsResponse(BaseModel):

@@ -1,51 +1,32 @@
-from pydantic_ai.models import Model, ModelRequestParameters, check_allow_model_requests
 from dataclasses import dataclass, field
+from typing import Optional
+
+from pydantic_ai import Agent
+from pydantic_ai.messages import (
+    ModelRequest,
+    ModelResponse,
+    TextPart,
+)
+from pydantic_ai.models import (
+    Model,
+    ModelRequestParameters,
+    check_allow_model_requests,
+)
 from pydantic_ai.providers import Provider
 from pydantic_ai.settings import ModelSettings
-from pydantic_ai.messages import ModelMessage, ModelRequest, ModelResponse, ModelRequest, ModelResponsePart, TextPart
 from pydantic_ai.usage import Usage
 from pydantic_model.lm_studio_client import LMStudioClient
-
-from pydantic_ai import Agent, DocumentUrl
-
-
-
-
-
-llm_config = {
-    # "contextOverflowPolicy": "stop",         # or "truncate", "warn", etc.
-    "maxTokens": 512,
-    "minPSampling": 0.05,
-    # "promptTemplate": "{system}\n{instruction}\n{input}",  # Or use actual prompt template if needed  -> IMPORTANT
-    "repeatPenalty": 1.1,
-    # "stopStrings": ["<|endoftext|>", "</s>"],
-    # "structured": True,  -> IMPORTANT
-    "temperature": 0.7,
-    # "toolCallStopStrings": ["<|toolend|>"],
-    # "rawTools": [],  # or list of tool schemas
-    "topKSampling": 40,
-    "topPSampling": 0.95,
-
-    # Flattened llama-specific settings
-    "cpuThreads": 8,  # Adjust to your CPU
-
-    # # Flattened reasoning settings
-    # "reasoningParsing": "auto",  # or "none", "strict", etc.
-    #
-    # # Flattened speculative decoding settings
-    # "draftModel": "gpt-3.5-turbo",  # Or your local draft model
-    # "speculativeDecodingMinDraftLengthToConsider": 10,
-    # "speculativeDecodingMinContinueDraftingProbability": 0.8,
-    # "speculativeDecodingNumDraftTokensExact": 20
-}
 
 
 class LMStudioProvider(Provider[LMStudioClient]):
     """Provider for LM Studio API."""
 
+    def __init__(self) -> None:
+        self._client = LMStudioClient()
+
     @property
     def name(self) -> str:
-        return 'lm-studio'
+        return "lm-studio"
 
     @property
     def base_url(self) -> str:
@@ -55,30 +36,16 @@ class LMStudioProvider(Provider[LMStudioClient]):
     def client(self) -> LMStudioClient:
         return self._client
 
-    def __init__(
-            self,
-    ):
-        self._client = LMStudioClient()
-
 
 @dataclass(init=False)
 class LMStudio(Model):
-    """A model that uses the LM Studio API.
+    """A model that uses the LM Studio API."""
 
-    Internally, this uses the [lmstudio-python](https://github.com/lmstudio-ai/lmstudio-python)
-    """
     client: LMStudioClient = field(repr=False)
-
     _model_name: str = field(repr=False)
-    _system: str = field(default='LM Studio', repr=False)
+    _system: str = field(default="LM Studio", repr=False)
 
-
-    def __init__(
-            self,
-            model_name: str,
-            *,
-            provider: LMStudioProvider,
-    ):
+    def __init__(self, model_name: str, *, provider: LMStudioProvider) -> None:
         self._model_name = model_name
         self.client = provider.client
 
@@ -88,100 +55,82 @@ class LMStudio(Model):
 
     @property
     def model_name(self) -> str:
-        """The model name."""
         return self._model_name
 
     @property
     def system(self) -> str:
-        """The system / model provider."""
         return self._system
+
+    def _get_max_tokens(self, model_settings: Optional[ModelSettings]) -> Optional[int]:
+        value = model_settings.get("max_tokens") if model_settings else None
+        return int(value) if isinstance(value, int) else None
+
+    def _get_temperature(self, model_settings: Optional[ModelSettings]) -> Optional[float]:
+        value = model_settings.get("temperature") if model_settings else None
+        return float(value) if isinstance(value, float) else None
+
+    def _get_stop(self, model_settings: Optional[ModelSettings]) -> Optional[str]:
+        value = model_settings.get("stop_sequences") if model_settings else None
+        return str(value[0]) if isinstance(value, list) and value else None
 
     async def request(
         self,
         messages: list[ModelRequest],
-        model_settings: ModelSettings | None,
-        model_request_parameters: ModelRequestParameters | None,
-    ):
+        model_settings: Optional[ModelSettings],
+        model_request_parameters: Optional[ModelRequestParameters],
+    ) -> tuple[ModelResponse, Usage]:
         check_allow_model_requests()
 
-        print(messages)
-        print(model_settings)
-        print(model_request_parameters)
+        request_body = {
+            "model": self._model_name,
+            **({"max_tokens": max_tokens} if (max_tokens := self._get_max_tokens(model_settings)) else {}),
+            **({"temperature": temperature} if (temperature := self._get_temperature(model_settings)) else {}),
+            # **({"stop": stop} if (stop := self._get_stop(model_settings)) else {}),
+        }
 
-        # extract user prompt
-        message = messages[0]  # Why it is a list?!
-        for part in message.parts:
-            if part.part_kind == 'user-prompt':
-                user_prompt = part.content
-                if type(user_prompt) == list: # 'document-url'
-                    print("NOT SUPPORTED")
-            if part.part_kind == 'system-prompt':
-                system_prompt = part.content
+        extracted_messages = []
+        for message in messages:
+            if message.instructions:
+                extracted_messages.append({"role": "system", "content": message.instructions})
+            for part in message.parts:
+                if part.part_kind == "user-prompt" and isinstance(part.content, str):
+                    extracted_messages.append({"role": "user", "content": part.content})
+                if part.part_kind == "system-prompt" and isinstance(part.content, str):
+                    extracted_messages.append({"role": "system", "content": part.content})
 
-        # extract instruction
-        instructions = message.instructions
+        request_body["messages"] = extracted_messages
+        response = self.client.create_chat_completions(**request_body)
 
-        # extract settings
-        if model_settings:
-            max_tokens = model_settings.get('max_tokens')  # maxTokens
-            temperature = model_settings.get('temperature')  # temperature
-            top_p = model_settings.get('top_p')  # topPSampling
-            stop_sequences = model_settings.get('stop_sequences')  # stopStrings
-            presence_penalty = model_settings.get('presence_penalty')  # repeatPenalty
-            frequency_penalty = model_settings.get('frequency_penalty')  # repeatPenalty
+        usage = Usage(
+            request_tokens=response.usage.prompt_tokens,
+            response_tokens=response.usage.completion_tokens,
+            total_tokens=response.usage.total_tokens,
+        )
 
-            config = {}
-            if max_tokens:
-                config['maxTokens'] = max_tokens
-            if temperature:
-                config['temperature'] = temperature
-            if top_p:
-                config['topKSampling'] = top_p
-            if stop_sequences:
-                config['stopSequences'] = stop_sequences
-            if presence_penalty:
-                config['presencePenalty'] = presence_penalty
-            if frequency_penalty:
-                config['frequencyPenalty'] = frequency_penalty
-
-        print("X0")
-        if model_request_parameters:
-            print("X1")
-            output_tools = model_request_parameters.output_tools  # Why list?!
-            output_tool = output_tools[0]
-            parameters_json_schema = output_tool.parameters_json_schema
-            print("X2")
+        text_parts = [TextPart(content=choice.message.content) for choice in response.choices]
+        return ModelResponse(text_parts, model_name=self.model_name), usage
 
 
+# Example usage
+if __name__ == "__main__":
+    provider = LMStudioProvider()
+    model = LMStudio(model_name="phi-4", provider=provider)
 
-        x = self._model.respond("hi my name is pouya. Who are you?", config=config)
+    agent = Agent(
+        instructions="You are a concise assistant that helps with math problems.",
+        model=model,
+        system_prompt="Use the customer's name while replying to them.",
+    )
 
-        items = []
-        items.append(TextPart(content="blabla"))
-        return ModelResponse(items, model_name="name"), Usage()
+    model_settings_x: ModelSettings = {
+        "max_tokens": 512,
+        "temperature": 0.7,
+        "stop_sequences": ["\n\n", "END"],
+    }
 
+    result = agent.run_sync(
+        user_prompt="Introduce yourself",
+        model_settings=model_settings_x,
+    )
 
-
-provider = LMStudioProvider()
-obj = LMStudio(model_name="phi-4", provider=provider)
-
-
-agent = Agent(
-    instructions="You are a concise assistant that helps with math problems.",
-    model=obj,
-    system_prompt="Use the customer's name while replying to them.",
-)
-
-
-
-model_settings = ModelSettings(temperature=0.5, max_tokens=100)
-usage = Usage()
-
-
-result = agent.run_sync(
-    user_prompt=  'What is the main content of this document?',
-    model_settings=model_settings,
-)
-
-print(result)
-
+    print(result)

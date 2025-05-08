@@ -13,3 +13,4 @@ This decision led to faster and simpler implementation, while also reducing exte
 ```python
 python -m pydantic_model.model
 ```
+
